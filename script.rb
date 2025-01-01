@@ -42,6 +42,11 @@ OUTPUT_CSV_FILE        = ENV.fetch("OUTPUT_CSV_FILE")
 CSV_HAS_HEADERS        = ENV.fetch("CSV_HAS_HEADERS", "false") == "true"
 SKIP_INITIAL_LINES      = ENV.fetch("SKIP_INITIAL_LINES", "0").to_i
 
+if File.exist?(OUTPUT_CSV_FILE)
+  warn "Error: Output file '#{OUTPUT_CSV_FILE}' already exists. Please remove it or specify a different output file."
+  exit 1
+end
+
 # ------------------------------------------------
 # USAGE EXPLANATION
 # ------------------------------------------------
