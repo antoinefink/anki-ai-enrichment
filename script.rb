@@ -70,8 +70,12 @@ rescue Errno::ENOENT
   CSV::Table.new([])
 end
 
-def write_csv_with_headers(table, file, separator)
-  CSV.open(file, "wb", col_sep: separator, write_headers: CSV_HAS_HEADERS) do |csv|
+def write_csv_with_headers(table, input_file, output_file, separator)
+  # Add back the lines that were ignored
+  lines = File.readlines(input_file)[0..SKIP_INITIAL_LINES - 1]
+  File.write(output_file, lines.join) if lines.any?
+
+  CSV.open(output_file, "a", col_sep: CSV_SEPARATOR, write_headers: CSV_HAS_HEADERS) do |csv|
     table.each { |row| csv << row }
   end
 end
@@ -222,7 +226,7 @@ when "perplexity", "gpt"
 
   table = read_csv_with_headers(INPUT_CSV_FILE, CSV_SEPARATOR)
   fill_column(table, col_index, user_prompt, command.to_sym)
-  write_csv_with_headers(table, OUTPUT_CSV_FILE, CSV_SEPARATOR)
+  write_csv_with_headers(table, INPUT_CSV_FILE, OUTPUT_CSV_FILE, CSV_SEPARATOR)
 
   puts "Finished processing. Updated CSV written to '#{OUTPUT_CSV_FILE}'."
 
