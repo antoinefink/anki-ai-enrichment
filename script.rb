@@ -73,7 +73,7 @@ end
 def write_csv_with_headers(table, input_file, output_file, separator)
   # Add back the lines that were ignored
   lines = File.readlines(input_file)[0..SKIP_INITIAL_LINES - 1]
-  File.write(output_file, lines.join) if lines.any?
+  File.write(output_file, lines.join) if lines.any? && SKIP_INITIAL_LINES > 0
 
   CSV.open(output_file, "a", col_sep: CSV_SEPARATOR, write_headers: CSV_HAS_HEADERS) do |csv|
     table.each { |row| csv << row }
@@ -173,8 +173,8 @@ def fill_column(table, col_index, user_prompt, service)
     puts "Column #{col_index} cell value: #{row[col_index]}"
 
     cell_value = row[col_index]
-    # Only fill empty cells
-    if cell_value.nil? || cell_value.strip.empty?
+    # Only fill empty cells if we're using Perplexity
+    if (cell_value.nil? || cell_value.strip.empty?) || service == :gpt
       begin
         # Substitute placeholders in the prompt with values from this row
         substituted_prompt = substitute_columns_in_prompt(user_prompt, row)
