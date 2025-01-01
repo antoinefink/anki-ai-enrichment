@@ -40,6 +40,7 @@ CSV_SEPARATOR          = ENV.fetch("CSV_SEPARATOR") # Typical values include ","
 INPUT_CSV_FILE         = ENV.fetch("INPUT_CSV_FILE")
 OUTPUT_CSV_FILE        = ENV.fetch("OUTPUT_CSV_FILE")
 CSV_HAS_HEADERS        = ENV.fetch("CSV_HAS_HEADERS", "false") == "true"
+SKIP_INITIAL_LINES      = ENV.fetch("SKIP_INITIAL_LINES", "0").to_i
 
 # ------------------------------------------------
 # USAGE EXPLANATION
@@ -62,7 +63,8 @@ CSV_HAS_HEADERS        = ENV.fetch("CSV_HAS_HEADERS", "false") == "true"
 #   - Adjust config at the top of the file as needed.
 
 def read_csv_with_headers(file, separator)
-  CSV.read(file, col_sep: separator, headers: CSV_HAS_HEADERS, return_headers: false)
+  lines = File.readlines(file)[SKIP_INITIAL_LINES..]
+  CSV.parse(lines.join, col_sep: separator, headers: CSV_HAS_HEADERS, return_headers: false)
 rescue Errno::ENOENT
   warn "Input CSV file '#{file}' not found. Creating an empty table with no headers."
   CSV::Table.new([])
