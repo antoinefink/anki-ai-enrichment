@@ -146,9 +146,17 @@ def fetch_answer_from_gpt(user_prompt)
   end
 
   data = JSON.parse(response.body)
-  # Typically: { "choices" => [ { "message" => { "role" => "assistant", "content" => "..." } } ] }
   choice = data.dig("choices", 0, "message", "content")
   choice || "[No valid GPT response]"
+end
+
+def substitute_columns_in_prompt(user_prompt, row)
+  # Use a regex to find occurrences of column_X
+  user_prompt.gsub(/\bcolumn_(\d+)\b/) do
+    col_idx = Regexp.last_match(1).to_i
+    # If the column index is out of range or nil, fallback to an empty string
+    row[col_idx] || ""
+  end
 end
 
 def fill_column(table, col_index, user_prompt, service)
@@ -161,11 +169,14 @@ def fill_column(table, col_index, user_prompt, service)
     # Only fill empty cells
     if cell_value.nil? || cell_value.strip.empty?
       begin
+        # Substitute placeholders in the prompt with values from this row
+        substituted_prompt = substitute_columns_in_prompt(user_prompt, row)
+
         new_value = case service
                     when :perplexity
-                      fetch_answer_from_perplexity(user_prompt)
+                      fetch_answer_from_perplexity(substituted_prompt)
                     when :gpt
-                      fetch_answer_from_gpt(user_prompt)
+                      fetch_answer_from_gpt(substituted_prompt)
                     else
                       raise "Unknown service: #{service}"
                     end
