@@ -118,6 +118,7 @@ def fetch_answer_from_perplexity(user_prompt)
 
   data = JSON.parse(response.body)
   choice = data.dig("choices", 0, "message", "content")
+  choice = choice.gsub(/\[\d+\]/, '') # Removes [1], [2], etc.
   choice
 end
 
