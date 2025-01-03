@@ -27,13 +27,13 @@ require 'debug'
 # ------------------------------------------------
 # Perplexity config
 PERPLEXITY_API_KEY          = ENV["PERPLEXITY_API_KEY"] or raise "Missing PERPLEXITY_API_KEY"
-PERPLEXITY_MODEL            = ENV["PERPLEXITY_MODEL"] || "llama-3.1-sonar-small-128k-online"
-PERPLEXITY_SYSTEM_PROMPT    = ENV["PERPLEXITY_SYSTEM_PROMPT"] || "Be precise and concise."
+PERPLEXITY_MODEL            = ENV.fetch("PERPLEXITY_MODEL", "llama-3.1-sonar-small-128k-online")
+PERPLEXITY_SYSTEM_PROMPT    = ENV.fetch("PERPLEXITY_SYSTEM_PROMPT", "Be precise and concise.")
 
 # GPT config
 GPT_API_KEY            = ENV["GPT_API_KEY"] or raise "Missing GPT_API_KEY"
-GPT_MODEL_NAME         = ENV["GPT_MODEL_NAME"] || "gpt-4o"
-GPT_SYSTEM_PROMPT      = ENV["GPT_SYSTEM_PROMPT"] || "You are a helpful assistant."
+GPT_MODEL_NAME         = ENV.fetch("GPT_MODEL_NAME", "gpt-4o")
+GPT_SYSTEM_PROMPT      = ENV.fetch("GPT_SYSTEM_PROMPT", "You are a helpful assistant.")
 
 # CSV / File config
 CSV_SEPARATOR          = ENV.fetch("CSV_SEPARATOR") # Typical values include ",", ";", "\t", or "|"
