@@ -1,4 +1,4 @@
-# CSV AI Enrichment using GPT or Perplexity
+# Anki and CSV AI Enrichment using GPT or Perplexity
 
 This script enriches CSV columns using **Perplexity** or **OpenAI's GPT**. You can either update an existing column or add a new one. It is especially useful for quickly adding data to a file or programmatically fixing existing data.
 
