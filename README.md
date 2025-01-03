@@ -2,10 +2,12 @@
 
 This script enriches CSV columns using **Perplexity** or **GPT**. You can either update an existing column or add a new one. It is especially useful for quickly adding data to a file or programmatically fixing existing data.
 
+I've used it to enrich and improve decks for Anki.
+
 ## Requirements
 
 - **Ruby** 3.x or higher
-- Valid **API keys** for Perplexity and GPT (configure in the script)
+- Valid **API keys** for Perplexity or GPT (configure in the script)
 
 ## Installation
 
