@@ -26,21 +26,21 @@ require 'debug'
 # CONFIGURATION
 # ------------------------------------------------
 # Perplexity config
-PERPLEXITY_API_KEY          = ENV["PERPLEXITY_API_KEY"] or raise "Missing PERPLEXITY_API_KEY"
-PERPLEXITY_MODEL            = ENV.fetch("PERPLEXITY_MODEL", "llama-3.1-sonar-small-128k-online")
-PERPLEXITY_SYSTEM_PROMPT    = ENV.fetch("PERPLEXITY_SYSTEM_PROMPT", "Be precise and concise.")
+PERPLEXITY_API_KEY       = ENV["PERPLEXITY_API_KEY"]
+PERPLEXITY_MODEL         = ENV.fetch("PERPLEXITY_MODEL", "llama-3.1-sonar-small-128k-online")
+PERPLEXITY_SYSTEM_PROMPT = ENV.fetch("PERPLEXITY_SYSTEM_PROMPT", "Be precise and concise.")
 
 # GPT config
-GPT_API_KEY            = ENV["GPT_API_KEY"] or raise "Missing GPT_API_KEY"
-GPT_MODEL_NAME         = ENV.fetch("GPT_MODEL_NAME", "gpt-4o")
-GPT_SYSTEM_PROMPT      = ENV.fetch("GPT_SYSTEM_PROMPT", "You are a helpful assistant.")
+GPT_API_KEY       = ENV["GPT_API_KEY"]
+GPT_MODEL_NAME    = ENV.fetch("GPT_MODEL_NAME", "gpt-4o")
+GPT_SYSTEM_PROMPT = ENV.fetch("GPT_SYSTEM_PROMPT", "You are a helpful assistant.")
 
 # CSV / File config
-CSV_SEPARATOR          = ENV.fetch("CSV_SEPARATOR") # Typical values include ",", ";", "\t", or "|"
-INPUT_CSV_FILE         = ENV.fetch("INPUT_CSV_FILE")
-OUTPUT_CSV_FILE        = ENV.fetch("OUTPUT_CSV_FILE")
-CSV_HAS_HEADERS        = ENV.fetch("CSV_HAS_HEADERS", "false") == "true"
-SKIP_INITIAL_LINES      = ENV.fetch("SKIP_INITIAL_LINES", "0").to_i
+CSV_SEPARATOR      = ENV.fetch("CSV_SEPARATOR")
+INPUT_CSV_FILE     = ENV.fetch("INPUT_CSV_FILE")
+OUTPUT_CSV_FILE    = ENV.fetch("OUTPUT_CSV_FILE")
+CSV_HAS_HEADERS    = ENV.fetch("CSV_HAS_HEADERS", "false") == "true"
+SKIP_INITIAL_LINES = ENV.fetch("SKIP_INITIAL_LINES", "0").to_i
 
 if File.exist?(OUTPUT_CSV_FILE)
   warn "Error: Output file '#{OUTPUT_CSV_FILE}' already exists. Please remove it or specify a different output file."
@@ -103,6 +103,9 @@ def list_columns(table)
 end
 
 def fetch_answer_from_perplexity(user_prompt)
+  # Raise error only if we actually need the Perplexity key
+  raise "Missing PERPLEXITY_API_KEY" if PERPLEXITY_API_KEY.nil? || PERPLEXITY_API_KEY.strip.empty?
+
   uri = URI("https://api.perplexity.ai/chat/completions")
   http = Net::HTTP.new(uri.host, uri.port)
   http.use_ssl = true
@@ -113,7 +116,7 @@ def fetch_answer_from_perplexity(user_prompt)
       { role: "system", content: PERPLEXITY_SYSTEM_PROMPT },
       { role: "user",   content: user_prompt }
     ],
-    max_tokens: 1_000,
+    max_tokens: 1_000
   }
 
   request = Net::HTTP::Post.new(uri)
@@ -134,6 +137,9 @@ def fetch_answer_from_perplexity(user_prompt)
 end
 
 def fetch_answer_from_gpt(user_prompt)
+  # Raise error only if we actually need the GPT key
+  raise "Missing GPT_API_KEY" if GPT_API_KEY.nil? || GPT_API_KEY.strip.empty?
+
   uri = URI("https://api.openai.com/v1/chat/completions")
   http = Net::HTTP.new(uri.host, uri.port)
   http.use_ssl = true
@@ -166,7 +172,6 @@ def substitute_columns_in_prompt(user_prompt, row)
   # Use a regex to find occurrences of column_X
   user_prompt.gsub(/\bcolumn_(\d+)\b/) do
     col_idx = Regexp.last_match(1).to_i
-    # If the column index is out of range or nil, fallback to an empty string
     row[col_idx] || ""
   end
 end
