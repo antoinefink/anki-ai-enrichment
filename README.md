@@ -11,29 +11,47 @@ I've used it to enrich and improve decks for Anki.
 
 ## Installation
 
-Modify the `.env.example` file with your API keys and configuration. Then run `mv .env.example .env` to have it be loaded.
+Copy the `.env.example` file to `.env` and add your API keys:
+
+```bash
+cp .env.example .env
+```
+
+Then edit `.env` to add your API keys.
 
 ## Usage
 
-1. List columns:
+The script requires input and output files to be specified using command-line options:
 
+```bash
+ruby script.rb -i input.csv -o output.csv [command] [args]
 ```
-ruby script.rb columns
+
+Available options:
+- `-i, --input FILE`: Input CSV file (required)
+- `-o, --output FILE`: Output CSV file (required)
+- `-s, --separator SEP`: CSV separator (default: tab)
+- `--headers`: CSV has headers
+- `--skip-lines N`: Skip N initial lines
+
+Commands:
+
+1. List columns:
+```bash
+ruby script.rb -i input.csv -o output.csv columns
 ```
 
 2. Enrich a column with Perplexity:
-
-```
-ruby script.rb perplexity <COLUMN_INDEX> "Your prompt"
+```bash
+ruby script.rb -i input.csv -o output.csv perplexity <COLUMN_INDEX> "Your prompt"
 ```
 
 3. Enrich a column with GPT:
-
-```
-ruby script.rb gpt <COLUMN_INDEX> "Convert the plain text to HTML markup: {column_1}"
+```bash
+ruby script.rb -i input.csv -o output.csv gpt <COLUMN_INDEX> "Convert the plain text to HTML markup: {column_1}"
 ```
 
 A few notes:
 - You can reference other columns in your prompt using `{column_#}`. For example, for column 1, you can use `{column_1}`.
 - Perplexity won't erase existing content.
-- I personally prefer to change the system prompt for GPT. You can do that in the `.env` file.
+- You can customize the system prompts for GPT and Perplexity in the `.env` file.

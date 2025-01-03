@@ -1,3 +1,10 @@
+require 'optparse'
+require 'csv'
+require 'net/http'
+require 'uri'
+require 'json'
+require 'debug'
+
 # Load environment variables from .env file
 def load_env_file
   return unless File.exist?(".env")
@@ -16,11 +23,37 @@ end
 # Load .env file before other requires
 load_env_file
 
-require 'csv'
-require 'net/http'
-require 'uri'
-require 'json'
-require 'debug'
+# ------------------------------------------------
+# Parse command line options
+# ------------------------------------------------
+options = {
+  separator: ENV.fetch("CSV_SEPARATOR", "\t"),
+  has_headers: ENV.fetch("CSV_HAS_HEADERS", "false") == "true",
+  skip_lines: ENV.fetch("SKIP_INITIAL_LINES", "0").to_i
+}
+
+OptionParser.new do |opts|
+  opts.banner = "Usage: ruby script.rb [options] command [args]"
+
+  opts.on("-i", "--input FILE", "Input CSV file") { |v| options[:input] = v }
+  opts.on("-o", "--output FILE", "Output CSV file") { |v| options[:output] = v }
+  opts.on("-s", "--separator SEP", "CSV separator (default: tab)") { |v| options[:separator] = v }
+  opts.on("--headers", "CSV has headers") { |v| options[:has_headers] = v }
+  opts.on("--skip-lines N", Integer, "Skip N initial lines") { |v| options[:skip_lines] = v }
+end.parse!
+
+# Validate required options
+if ARGV.empty? || options[:input].nil?
+  warn "Error: Input file is required. Use -i or --input option."
+  exit 1
+end
+
+command = ARGV[0]
+
+if command != "columns" && options[:output].nil?
+  warn "Error: Output file is required. Use -o or --output option."
+  exit 1
+end
 
 # ------------------------------------------------
 # CONFIGURATION
@@ -32,17 +65,18 @@ PERPLEXITY_SYSTEM_PROMPT = ENV.fetch("PERPLEXITY_SYSTEM_PROMPT", "Be precise and
 
 # GPT config
 GPT_API_KEY       = ENV["GPT_API_KEY"]
-GPT_MODEL_NAME    = ENV.fetch("GPT_MODEL_NAME", "gpt-4o")
+GPT_MODEL_NAME    = ENV.fetch("GPT_MODEL_NAME", "gpt-4")
 GPT_SYSTEM_PROMPT = ENV.fetch("GPT_SYSTEM_PROMPT", "You are a helpful assistant.")
 
-# CSV / File config
-CSV_SEPARATOR      = ENV.fetch("CSV_SEPARATOR")
-INPUT_CSV_FILE     = ENV.fetch("INPUT_CSV_FILE")
-OUTPUT_CSV_FILE    = ENV.fetch("OUTPUT_CSV_FILE")
-CSV_HAS_HEADERS    = ENV.fetch("CSV_HAS_HEADERS", "false") == "true"
-SKIP_INITIAL_LINES = ENV.fetch("SKIP_INITIAL_LINES", "0").to_i
+# CSV / File config from command line options
+CSV_SEPARATOR      = options[:separator]
+INPUT_CSV_FILE     = options[:input]
+OUTPUT_CSV_FILE    = options[:output]
+CSV_HAS_HEADERS    = options[:has_headers]
+SKIP_INITIAL_LINES = options[:skip_lines]
 
-if File.exist?(OUTPUT_CSV_FILE)
+
+if command != "columns" && File.exist?(OUTPUT_CSV_FILE)
   warn "Error: Output file '#{OUTPUT_CSV_FILE}' already exists. Please remove it or specify a different output file."
   exit 1
 end
@@ -51,13 +85,13 @@ end
 # USAGE EXPLANATION
 # ------------------------------------------------
 # 1) List all columns with their indices:
-#      ruby script.rb columns
+#      ruby script.rb -i input.csv columns
 #
 # 2) Use Perplexity on a specific column:
-#      ruby script.rb perplexity COL_INDEX "PROMPT"
+#      ruby script.rb -i input.csv -o output.csv perplexity COL_INDEX "PROMPT"
 #
 # 3) Use GPT on a specific column:
-#      ruby script.rb gpt COL_INDEX "PROMPT"
+#      ruby script.rb -i input.csv -o output.csv gpt COL_INDEX "PROMPT"
 #
 # Notes:
 #   - COLUMN_NUMBER is zero-based (0, 1, 2, etc.)
@@ -212,13 +246,11 @@ end
 
 if ARGV.empty?
   warn "Usage:\n" \
-       "  ruby #{__FILE__} columns\n" \
-       "  ruby #{__FILE__} perplexity COL_INDEX \"PROMPT\"\n" \
-       "  ruby #{__FILE__} gpt COL_INDEX \"PROMPT\"\n"
+       "  ruby #{__FILE__} -i input.csv -o output.csv columns\n" \
+       "  ruby #{__FILE__} -i input.csv -o output.csv perplexity COL_INDEX \"PROMPT\"\n" \
+       "  ruby #{__FILE__} -i input.csv -o output.csv gpt COL_INDEX \"PROMPT\"\n"
   exit 0
 end
-
-command = ARGV[0]
 
 case command
 when "columns"
